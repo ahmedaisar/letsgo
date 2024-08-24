@@ -1,9 +1,6 @@
-const express = require('express');
 const puppeteer = require('puppeteer-core');
 const chrome = require('@sparticuz/chromium-min');
 
-const app = express();
- 
 
 async function login(page){
   // Login
@@ -74,6 +71,10 @@ async function scraper() {
   //   headless: false,
   //   defaultViewport: null
   // });
+  
+}
+
+(async () => {
   let browser
 
   try {
@@ -82,11 +83,6 @@ async function scraper() {
      );
      
      browser = await puppeteer.launch({
-      args: [
-        ...chrome.args,
-        '--hide-scrollbars', 
-        '--disable-web-security',
-      ],
        executablePath: executablePath,
        headless: false,
      });
@@ -121,16 +117,4 @@ async function scraper() {
   } finally {
     await browser.close();
   }
-}
-
-app.get('/search', async (req, res) => {
-  const result = await scraper();
-  res.json(result);
-});
-
-const port = process.env.PORT || 3000;
-app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
-});
-
-module.exports = app;
+})();
