@@ -77,14 +77,15 @@ async function scraper() {
   //   headless: false,
   //   defaultViewport: null
   // });
+  let browser
 
   try {
-    const executablePath = await chromium.executablePath(
+    const executablePath = await chrome.executablePath(
       `https://github.com/Sparticuz/chromium/releases/download/v123.0.1/chromium-v123.0.1-pack.tar`
      );
      
      browser = await puppeteer.launch({
-       args: [...chromium.args, '--hide-scrollbars', '--disable-web-security'],
+       args: [...chrome.args, '--hide-scrollbars', '--disable-web-security'],
        ignoreDefaultArgs: ['--disable-extensions'],
        executablePath: executablePath,
        headless: true,
