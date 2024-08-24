@@ -2,10 +2,10 @@
   "name": "express-puppeteer-scraper",
   "version": "1.0.0",
   "description": "Hotel data scraper using Express.js and Puppeteer",
-  "main": "server.js",
+  "main": "index.js",
   "scripts": {
-    "start": "node index.js",
-    "dev": "nodemon index.js"
+    "start": "node api/letsgo/index.js",
+    "dev": "nodemon api/letsgo/index.js"
   },
   "dependencies": {
     "@sparticuz/chromium-min": "^127.0.0",
