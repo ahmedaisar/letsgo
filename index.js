@@ -88,7 +88,7 @@ async function scraper() {
         '--disable-web-security',
       ],
        executablePath: executablePath,
-       headless: true,
+       headless: false,
      });
        const page = await browser.newPage();
  
