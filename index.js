@@ -63,7 +63,7 @@ async function scrapeHotelData(page, itemCount = 15) {
           clearInterval(intervalId);
           resolve(hotels);
         }
-      }, 1000); // Check every second
+      }, 3000); // Check every second
     });
   }, itemCount);
 }
@@ -82,10 +82,13 @@ async function scraper() {
      );
      
      browser = await puppeteer.launch({
-       args: [...chrome.args, '--hide-scrollbars', '--disable-web-security'],
-       ignoreDefaultArgs: ['--disable-extensions'],
+      args: [
+        ...chrome.args,
+        '--hide-scrollbars', 
+        '--disable-web-security',
+      ],
        executablePath: executablePath,
-       headless: true,
+       headless: 'new',
      });
        const page = await browser.newPage();
  
@@ -105,7 +108,7 @@ async function scraper() {
     
     await login(page)
     await performSearch(page)
-    await page.waitForSelector('.hotel-list-item-wrapper', { timeout: 30000 });
+    await page.waitForSelector('.hotel-list-item-wrapper');
     await scrapeHotelData(page, 10)
     const hotels = await scrapeHotelData(page);
     console.log(JSON.stringify(hotels, null, 2));
