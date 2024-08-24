@@ -1,97 +1,126 @@
-<script>
-  import { onMount, onDestroy } from 'svelte';
-  import { writable } from 'svelte/store';
+const fastify = require('fastify')({ logger: true });
+const puppeteer = require('puppeteer-core');
+const chrome = require('@sparticuz/chromium');
 
-  const scrapedData = writable([]);
-  const connectionStatus = writable('Disconnected');
-  const error = writable(null);
+// WebSocket plugin
+fastify.register(require('@fastify/websocket'));
 
-  let socket;
+// Configure Chromium
+chrome.setHeadlessMode = true;
+chrome.setGraphicsMode = false;
 
-  function connectWebSocket() {
-    socket = new WebSocket('wss://your-vercel-deployment-url.vercel.app/scrape');
+// Login function (unchanged)
+async function loginToWebsite(page) {
+  await page.goto('https://agent.letsgomaldives.com/login/', { waitUntil: 'networkidle0' });
 
-    socket.onopen = () => {
-      connectionStatus.set('Connected');
-      error.set(null);
-      socket.send("Start scraping");
-    };
+  // Wait for the CSRF token to be available
+  await page.waitForSelector('input[name="csrfmiddlewaretoken"]');
 
-    socket.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        if (data.error) {
-          error.set(data.error);
-        } else {
-          scrapedData.set(data);
-          error.set(null);
-        }
-      } catch (e) {
-        error.set('Failed to parse server response');
-      }
-    };
+  // Get the CSRF token
+  const csrfToken = await page.$eval('input[name="csrfmiddlewaretoken"]', el => el.value);
 
-    socket.onclose = (event) => {
-      if (event.wasClean) {
-        connectionStatus.set(`Disconnected: ${event.reason}`);
-      } else {
-        connectionStatus.set('Connection died');
-      }
-    };
+  // Fill in the login form
+  await page.type('input[name="useremail"]', 'aiman@bubbleholidays.co');
+  await page.type('input[name="userpassword"]', '123QWEasd!');
 
-    socket.onerror = (error) => {
-      error.set(`WebSocket Error: ${error.message}`);
-    };
+  // Submit the form
+  await Promise.all([
+    page.waitForNavigation({ waitUntil: 'networkidle0' }),
+    page.evaluate((csrfToken) => {
+      const form = document.querySelector('form');
+      const csrfInput = document.createElement('input');
+      csrfInput.type = 'hidden';
+      csrfInput.name = 'csrfmiddlewaretoken';
+      csrfInput.value = csrfToken;
+      form.appendChild(csrfInput);
+      form.submit();
+    }, csrfToken)
+  ]);
+
+  // Check if login was successful
+  const url = page.url();
+  if (url.includes('login')) {
+    throw new Error('Login failed');
   }
+}
 
-  function disconnectWebSocket() {
-    if (socket) {
-      socket.close();
+// Search function (unchanged)
+async function performSearch(page) {
+  await page.goto('https://agent.letsgomaldives.com/hotel-search/', { waitUntil: 'networkidle0' });
+
+  // Wait for the CSRF token to be available
+  await page.waitForSelector('input[name="csrfmiddlewaretoken"]');
+
+  // Get the CSRF token
+  const csrfToken = await page.$eval('input[name="csrfmiddlewaretoken"]', el => el.value);
+
+  // Construct the search URL
+  const searchUrl = `https://agent.letsgomaldives.com/hotel-search/?csrfmiddlewaretoken=${csrfToken}&request_with=&request_value=&resort_slug=&country_slug=&features=&stars=&price_from=&price_to=&currency=USD&rate_code=7ZV5P&part_number=1&search_type=&travellers_ages=25-25&main_country_id=&hotel_ids=&resort_ids=&feature_ids=&stars_ids=&meal_plan=&hotel_sort=&hotel_limit=&hotels_list_view=&fast=&destination=&date_start=07.09.2024&date_end=14.09.2024&adults=2&childs=0&guests=ST&nationality=228&any_resort=on&any_star=on&any_hotel=on`;
+
+  // Navigate to the search URL
+  await page.goto(searchUrl, { waitUntil: 'networkidle0' });
+}
+
+// Scrape function (unchanged)
+async function scrapeHotelData(page) {
+  return await page.evaluate(() => {
+    const hotels = [];
+    const rows = document.querySelectorAll('.hotel-list-item-wrapper');
+
+    rows.forEach(row => {
+      const hotel = {
+        checkIn: row.querySelector('td:nth-child(1)').textContent.trim(),
+        nights: row.querySelector('td:nth-child(2)').textContent.trim(),
+        name: row.querySelector('.hotel-card__title-link-td-name').textContent.trim(),
+        location: row.querySelector('.hotel-card__location-link--resort').textContent.trim(),
+        roomType: row.querySelector('td:nth-child(4)').textContent.trim(),
+        mealPlan: row.querySelector('td:nth-child(5)').textContent.trim(),
+        availability: row.querySelector('td:nth-child(6)').textContent.trim(),
+        price: row.querySelector('.hotel-card__price').textContent.trim(),
+        currency: row.querySelector('.hotel-card__price-currency').textContent.trim()
+      };
+      hotels.push(hotel);
+    });
+
+    return hotels;
+  });
+}
+
+// WebSocket route for scraping
+fastify.get('/scrape', { websocket: true }, (connection, req) => {
+  connection.socket.on('message', async (message) => {
+    try {
+      const browser = await puppeteer.launch({
+        args: chrome.args,
+        defaultViewport: chrome.defaultViewport,
+        executablePath: await chrome.executablePath(),
+        headless: chrome.headless,
+        ignoreHTTPSErrors: true,
+      });
+      const page = await browser.newPage();      
+      await loginToWebsite(page);
+      await page.waitForSelector('.content-container-wrapper', { timeout: 30000 });
+      await performSearch(page);      
+      await page.waitForSelector('.hotel-list-item-wrapper', { timeout: 30000 });
+      const hotelData = await scrapeHotelData(page);
+
+      connection.socket.send(JSON.stringify(hotelData));
+      await browser.close();
+    } catch (error) {
+      connection.socket.send(JSON.stringify({ error: error.message }));
     }
-  }
-
-  onMount(() => {
-    connectWebSocket();
   });
+});
 
-  onDestroy(() => {
-    disconnectWebSocket();
-  });
-</script>
-
-<main>
-  <h1>Hotel Scraper</h1>
-  <p>Status: {$connectionStatus}</p>
-  {#if $error}
-    <p class="error">{$error}</p>
-  {/if}
-  
-  <button on:click={connectWebSocket} disabled={$connectionStatus === 'Connected'}>
-    Connect and Start Scraping
-  </button>
-  
-  <button on:click={disconnectWebSocket} disabled={$connectionStatus !== 'Connected'}>
-    Disconnect
-  </button>
-
-  {#if $scrapedData.length > 0}
-    <h2>Scraped Data:</h2>
-    <ul>
-      {#each $scrapedData as hotel}
-        <li>
-          <strong>{hotel.name}</strong> - {hotel.location}<br>
-          Room: {hotel.roomType}, Meal Plan: {hotel.mealPlan}<br>
-          Price: {hotel.price} {hotel.currency}
-        </li>
-      {/each}
-    </ul>
-  {:else}
-    <p>No data scraped yet.</p>
-  {/if}
-</main>
-
-<style>
-  .error {
-    color: red;
+// Start the server
+const start = async () => {
+  try {
+    await fastify.listen({ port: process.env.PORT || 3000, host: '0.0.0.0' });
+  } catch (err) {
+    fastify.log.error(err);
+    process.exit(1);
   }
-</style>
+};
+start();
+
+module.exports = fastify;
