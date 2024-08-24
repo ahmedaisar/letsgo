@@ -1,12 +1,9 @@
 const express = require('express');
 const puppeteer = require('puppeteer-core');
-const chrome = require('@sparticuz/chromium');
+const chrome = require('@sparticuz/chromium-min');
 
 const app = express();
-
-const executablePath = await chromium.executablePath(
-  `https://github.com/Sparticuz/chromium/releases/download/v123.0.1/chromium-v123.0.1-pack.tar`
- );
+ 
 
 async function login(page){
   // Login
