@@ -4,9 +4,8 @@ const chrome = require("@sparticuz/chromium-min");
 async function login(page) {
   // Login
   await page.goto("https://agent.letsgomaldives.com/login-page/", {
-    waitUntil: "domcontentloaded",
+    waitUntil: "networkidle2",
   });
-  page.waitForNavigation({ waitUntil: "networkidle2" }),
   await page.waitForSelector('input[name="useremail"]');
   await page.$eval(
     'input[name="useremail"]',
@@ -106,7 +105,6 @@ module.exports = async (req, res) => {
     );
 
     browser = await puppeteer.launch({
-      args: [...chrome.args, "--hide-scrollbars", "--disable-web-security"],
       executablePath: executablePath,
       headless: true,
       ignoreHTTPSErrors: true,
@@ -119,19 +117,19 @@ module.exports = async (req, res) => {
 
     await page.setUserAgent(ua);
 
-    // await page.setRequestInterception(true);
+    await page.setRequestInterception(true);
 
-    // await page.on("request", async (request) => {
-    //   if (
-    //     request.resourceType() === "image" ||
-    //     request.resourceType() === "media" ||
-    //     request.resourceType() === "font"
-    //   ) {
-    //     request.abort();
-    //   } else {
-    //     request.continue();
-    //   }
-    // });
+    await page.on("request", async (request) => {
+      if (
+        request.resourceType() === "image" ||
+        request.resourceType() === "media" ||
+        request.resourceType() === "font"
+      ) {
+        request.abort();
+      } else {
+        request.continue();
+      }
+    });
 
     await login(page);
     await performSearch(page);
