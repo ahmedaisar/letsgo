@@ -84,7 +84,7 @@ async function scraper() {
      
      browser = await puppeteer.launch({
        executablePath: executablePath,
-       headless: false,
+       headless: true,
      });
        const page = await browser.newPage();
  
