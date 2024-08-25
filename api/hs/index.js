@@ -23,11 +23,8 @@ async function scrapeHotelData(page, checkin, checkout, adults = 2, child = 0) {
  
 module.exports = async (req, res) => {
   let browser;
-  const checkin = req.params['checkin'] 
-  const checkout = req.params['checkout'] 
-  const adults = req.params['adults'] 
-  const child = req.params['child'] 
-
+  const { checkin, checkout, adults, child } = req.query;
+ 
   try {
     const executablePath = await chrome.executablePath(
       `https://github.com/Sparticuz/chromium/releases/download/v123.0.1/chromium-v123.0.1-pack.tar`
