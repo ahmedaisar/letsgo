@@ -1,6 +1,6 @@
 const puppeteer = require("puppeteer-core");
 const chrome = require("@sparticuz/chromium-min");
-
+export const maxDuration = 60;
 async function login(page) {
   // Login
   await page.goto("https://agent.letsgomaldives.com/login-page/", {
