@@ -1,9 +1,9 @@
 const puppeteer = require("puppeteer-core");
 const chrome = require("@sparticuz/chromium-min");
-export const maxDuration = 60;
+export const maxDuration = 30
  
  
-async function scrapeHotelData(page, checkin, checkout, adults = 2, child = 0) {
+async function scrapeHotelData(page, checkin, checkout, adults, child) {
    // Construct the search URL
   const searchUrl = `https://hotelscan.com/en`;
 
@@ -30,11 +30,6 @@ module.exports = async (req, res) => {
     );
 
     browser = await puppeteer.launch({
-      args: [
-        ...chrome.args,
-        '--hide-scrollbars', 
-        '--disable-web-security',
-      ],
       executablePath: executablePath,
       headless: true,
       ignoreHTTPSErrors: true,
