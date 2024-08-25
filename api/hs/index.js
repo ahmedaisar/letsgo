@@ -59,7 +59,7 @@ module.exports = async (req, res) => {
 
     const hotels = await scrapeHotelData(page, checkin, checkout, adults, child);
  
-    res.status(200).json(JSON.stringify(hotels));
+    res.status(200).json(JSON.parse(hotels));
   } catch (error) {
     console.log(error);
     res.statusCode = 500;
