@@ -30,7 +30,6 @@ module.exports = async (req, res) => {
     );
 
     browser = await puppeteer.launch({
-      args:['--no-sandbox'],
       executablePath: executablePath,
       headless: true,
       ignoreHTTPSErrors: true,
@@ -61,12 +60,13 @@ module.exports = async (req, res) => {
     const hotels = await scrapeHotelData(page, checkin, checkout, adults, child);
  
     res.status(200).json(hotels);
+
+    await browser.close();
+
   } catch (error) {
     console.log(error);
     res.statusCode = 500;
-    res.json({
-      body: error,
-    });
+    res.send({error});
   } finally {
     if (browser) {
       await browser.close();
