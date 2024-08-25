@@ -4,7 +4,7 @@ const chrome = require("@sparticuz/chromium-min");
 async function login(page) {
   // Login
   await page.goto("https://agent.letsgomaldives.com/login-page/", {
-    waitUntil: "load",
+    waitUntil: "domcontentloaded",
   });
   await page.waitForSelector('input[name="useremail"]');
   await page.$eval(

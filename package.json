@@ -8,8 +8,8 @@
     "dev": "nodemon api/letsgo/index.js"
   },
   "dependencies": {
-    "@sparticuz/chromium-min": "^127.0.0",
-    "puppeteer-core": "^19.7.2"
+    "@sparticuz/chromium-min": "^126.0.0",
+    "puppeteer-core": "^23.1.1"
   },
   "devDependencies": {
     "nodemon": "^2.0.22"
