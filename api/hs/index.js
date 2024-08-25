@@ -6,7 +6,7 @@ export const maxDuration = 60;
 async function scrapeHotelData(page, checkin, checkout, adults = 2, child = 0) {
    // Construct the search URL
   const searchUrl = `https://hotelscan.com/en`;
-  const checkin = req.params['checkin']
+
 
   await Promise.all([
     page.goto(searchUrl, { waitUntil: "domcontentloaded" }),
