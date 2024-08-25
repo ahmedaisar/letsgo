@@ -65,7 +65,7 @@ module.exports = async (req, res) => {
     console.log(error);
     res.statusCode = 500;
     res.json({
-      body: "Sorry, Something went wrong!",
+      body: error,
     });
   } finally {
     if (browser) {
