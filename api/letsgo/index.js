@@ -3,7 +3,7 @@ const chrome = require("@sparticuz/chromium-min");
 
 async function login(page) {
   // Login
-  await page.goto("https://agent.letsgomaldives.com/login-page", {
+  await page.goto("https://agent.letsgomaldives.com/login-page/", {
     waitUntil: "domcontentloaded",
   });
   page.waitForNavigation({ waitUntil: "networkidle2" }),
@@ -38,7 +38,7 @@ async function performSearch(page) {
   await Promise.all([
     page.goto(searchUrl, { waitUntil: "domcontentloaded" }),
     page.waitForNavigation({ waitUntil: "domcontentloaded" }),
-  ]);
+  ])
 }
 
 async function scrapeHotelData(page, itemCount = 15) {
@@ -119,34 +119,35 @@ module.exports = async (req, res) => {
 
     await page.setUserAgent(ua);
 
-    await page.setRequestInterception(true);
+    // await page.setRequestInterception(true);
 
-    await page.on("request", async (request) => {
-      if (
-        request.resourceType() === "image" ||
-        request.resourceType() === "media" ||
-        request.resourceType() === "font"
-      ) {
-        request.abort();
-      } else {
-        request.continue();
-      }
-    });
+    // await page.on("request", async (request) => {
+    //   if (
+    //     request.resourceType() === "image" ||
+    //     request.resourceType() === "media" ||
+    //     request.resourceType() === "font"
+    //   ) {
+    //     request.abort();
+    //   } else {
+    //     request.continue();
+    //   }
+    // });
 
     await login(page);
     await performSearch(page);
     await page.waitForSelector(".hotel-list-item-wrapper");
-    await scrapeHotelData(page, 10);
-    const hotels = await scrapeHotelData(page);
+    const hotels = await scrapeHotelData(page, 10);
     console.log(JSON.stringify(hotels, null, 2));
-
-    return { success: true, message: "Search completed", hotels };
+    res.status(200).json(data);
   } catch (error) {
-    console.error("Error:", error);
-    return { success: false, message: error.message };
+    console.log(error);
+    res.statusCode = 500;
+    res.json({
+      body: "Sorry, Something went wrong!",
+    });
   } finally {
-    await browser.close();
+    if (browser) {
+      await browser.close();
+    }
   }
-
-
-}
+};
