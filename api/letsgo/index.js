@@ -96,7 +96,7 @@ async function scraper() {
   // });
 }
 
-(async () => {
+module.exports = async (req, res) => {
   let browser;
 
   try {
@@ -146,4 +146,6 @@ async function scraper() {
   } finally {
     await browser.close();
   }
-})();
+
+
+}
