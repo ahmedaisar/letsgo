@@ -3,9 +3,10 @@ const chrome = require("@sparticuz/chromium-min");
 
 async function login(page) {
   // Login
-  await page.goto("https://agent.letsgomaldives.com/login-page/", {
+  await page.goto("https://agent.letsgomaldives.com/login-page", {
     waitUntil: "domcontentloaded",
   });
+  page.waitForNavigation({ waitUntil: "networkidle2" }),
   await page.waitForSelector('input[name="useremail"]');
   await page.$eval(
     'input[name="useremail"]',
@@ -17,7 +18,7 @@ async function login(page) {
   );
   await Promise.all([
     page.$eval('button[type="submit"]', (el) => el.click()),
-    page.waitForNavigation({ waitUntil: "domcontentloaded" }),
+    page.waitForNavigation({ waitUntil: "networkidle2" }),
   ]);
 }
 
