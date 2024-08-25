@@ -105,7 +105,7 @@ async function scraper() {
     );
 
     browser = await puppeteer.launch({
-      args: [...chromium.args, "--hide-scrollbars", "--disable-web-security"],
+      args: [...chrome.args, "--hide-scrollbars", "--disable-web-security"],
       executablePath: executablePath,
       headless: true,
       ignoreHTTPSErrors: true,
