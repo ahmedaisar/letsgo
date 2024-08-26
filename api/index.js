@@ -17,8 +17,7 @@ async function scrapeHotelData(checkin, checkout, adults, child) {
     );
 
     browser = await puppeteer.launch({
-      args: [...chrome.args, "--hide-scrollbars", "--disable-web-security"],
-      defaultViewport: chrome.defaultViewport,
+
       executablePath: executablePath,
       headless: true,
       ignoreHTTPSErrors: true,
