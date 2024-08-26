@@ -1,4 +1,5 @@
- 
+const fetch = require('node-fetch');
+
 module.exports = async (req, res) => {
   const { checkin, checkout, adults, child } = req.query;
 
@@ -16,11 +17,11 @@ module.exports = async (req, res) => {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const data = await response.text();
+    const data = await response.json();
 
-    res.status(200).json(JSON.parse(data));
+    res.status(200).json(data);
   } catch (error) {
     console.error('Error:', error);
-    res.status(500).json({ error: 'An error occurred during the request' });
+    res.status(500).json({ error});
   }
 };
