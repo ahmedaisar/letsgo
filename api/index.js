@@ -58,8 +58,7 @@ async function scrapeHotelData(checkin, checkout, adults, child) {
 
     await page.on("response", async (response) => {
       if (
-        response.url() ==
-        `https://hotelscan.com/combiner?pos=zz&locale=en&checkin=${checkin}&checkout=${checkout}&rooms=${adults}${child ? child : ""}&mobile=0&loop=1&country=MV&ef=1&geoid=x5p4hmhw6iot&toas=hotel%2Cresort%2Cguest_house&stars=5%2C4%2C3&availability=1&deviceNetwork=4g&deviceCpu=20&deviceMemory=8&limit=25&offset=0`
+        response.url().includes('/combiner?pos=zz')
       ) {
         console.log("received, awaiting log...");
         data = await response.json();
