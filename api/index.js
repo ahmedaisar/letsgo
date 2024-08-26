@@ -153,9 +153,10 @@ async function scrapeLetsgoData(itemCount = 15) {
     );
 
     browser = await puppeteer.launch({
-      args: [
+     args: [
         ...chrome.args,
-        "--no-sandbox"
+        "--disable-web-security",
+        "--disable-features=IsolateOrigins,site-per-process"
       ],
       executablePath: executablePath,
       headless: true,
@@ -186,7 +187,7 @@ async function scrapeLetsgoData(itemCount = 15) {
     await login(page);
     await performSearch(page);
     await page.waitForSelector(".hotel-list-item-wrapper");
-
+    await page.waitForNavigation({ waitUntil: "domcontentloaded" })
     await page.evaluate((itemCount) => {
       return new Promise((resolve) => {
         const hotels = [];
