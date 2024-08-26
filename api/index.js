@@ -144,7 +144,7 @@ async function performSearch(page) {
   ]);
 }
 
-async function scrapeLetsgoData(page, itemCount = 15) {
+async function scrapeLetsgoData(itemCount = 15) {
   let browser;
 
   try {
@@ -257,8 +257,8 @@ async function scrapeLetsgoData(page, itemCount = 15) {
   }
 }
 
-app.get("/api/letsgo", async (req, res) => {
-  const data = await scrapeLetsgoData(page, 10);
+app.get("/api/lg", async (req, res) => {
+  const data = await scrapeLetsgoData(10);
 
   res.status(200).json(JSON.parse(data));
 });
