@@ -105,7 +105,6 @@ app.get("/api/hotels", async (req, res) => {
   res.json(JSON.parse(hotels));
 });
 
-
 async function login(page) {
   // Login
   await page.goto("https://agent.letsgomaldives.com/login-page/", {
@@ -142,61 +141,11 @@ async function performSearch(page) {
   await Promise.all([
     page.goto(searchUrl, { waitUntil: "domcontentloaded" }),
     page.waitForNavigation({ waitUntil: "domcontentloaded" }),
-  ])
+  ]);
 }
 
 async function scrapeLetsgoData(page, itemCount = 15) {
-  return await page.evaluate((itemCount) => {
-    return new Promise((resolve) => {
-      const hotels = [];
-      const intervalId = setInterval(() => {
-        const rows = document.querySelectorAll(".hotel-list-item-wrapper");
-        rows.forEach((row, index) => {
-          if (
-            index < itemCount &&
-            !hotels.some(
-              (h) =>
-                h.name ===
-                row
-                  .querySelector(".hotel-card__title-link-td-name")
-                  .textContent.trim()
-            )
-          ) {
-            const hotel = {
-              checkIn: row.querySelector("td:nth-child(1)").textContent.trim(),
-              nights: row.querySelector("td:nth-child(2)").textContent.trim(),
-              name: row
-                .querySelector(".hotel-card__title-link-td-name")
-                .textContent.trim(),
-              location: row
-                .querySelector(".hotel-card__location-link--resort")
-                .textContent.trim(),
-              roomType: row.querySelector("td:nth-child(4)").textContent.trim(),
-              mealPlan: row.querySelector("td:nth-child(5)").textContent.trim(),
-              availability: row
-                .querySelector("td:nth-child(6)")
-                .textContent.trim(),
-              price: row.querySelector(".hotel-card__price").textContent.trim(),
-              currency: row
-                .querySelector(".hotel-card__price-currency")
-                .textContent.trim(),
-            };
-            hotels.push(hotel);
-          }
-        });
-        if (hotels.length >= itemCount) {
-          clearInterval(intervalId);
-          resolve(hotels);
-        }
-      }, 3000); // Check every second
-    });
-  }, itemCount);
-}
-
-app.get("/api/letsgo", async (req, res) => {
-
-  let browser
-  let hotels
+  let browser;
 
   try {
     const executablePath = await chrome.executablePath(
@@ -204,7 +153,7 @@ app.get("/api/letsgo", async (req, res) => {
     );
 
     browser = await puppeteer.launch({
-        args: [
+      args: [
         ...chrome.args,
         "--disable-gpu",
         "--disable-dev-shm-usage",
@@ -223,7 +172,9 @@ app.get("/api/letsgo", async (req, res) => {
 
     await page.setRequestInterception(true);
 
-    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36')
+    await page.setUserAgent(
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36"
+    );
 
     await page.on("request", async (request) => {
       if (
@@ -241,21 +192,75 @@ app.get("/api/letsgo", async (req, res) => {
     await performSearch(page);
     await page.waitForSelector(".hotel-list-item-wrapper");
 
-    hotels = await scrapeLetsgoData(page, 10);
+    await page.evaluate((itemCount) => {
+      return new Promise((resolve) => {
+        const hotels = [];
+        const intervalId = setInterval(() => {
+          const rows = document.querySelectorAll(".hotel-list-item-wrapper");
+          rows.forEach((row, index) => {
+            if (
+              index < itemCount &&
+              !hotels.some(
+                (h) =>
+                  h.name ===
+                  row
+                    .querySelector(".hotel-card__title-link-td-name")
+                    .textContent.trim()
+              )
+            ) {
+              const hotel = {
+                checkIn: row
+                  .querySelector("td:nth-child(1)")
+                  .textContent.trim(),
+                nights: row.querySelector("td:nth-child(2)").textContent.trim(),
+                name: row
+                  .querySelector(".hotel-card__title-link-td-name")
+                  .textContent.trim(),
+                location: row
+                  .querySelector(".hotel-card__location-link--resort")
+                  .textContent.trim(),
+                roomType: row
+                  .querySelector("td:nth-child(4)")
+                  .textContent.trim(),
+                mealPlan: row
+                  .querySelector("td:nth-child(5)")
+                  .textContent.trim(),
+                availability: row
+                  .querySelector("td:nth-child(6)")
+                  .textContent.trim(),
+                price: row
+                  .querySelector(".hotel-card__price")
+                  .textContent.trim(),
+                currency: row
+                  .querySelector(".hotel-card__price-currency")
+                  .textContent.trim(),
+              };
+              hotels.push(hotel);
+            }
+          });
+          if (hotels.length >= itemCount) {
+            clearInterval(intervalId);
+            resolve(hotels);
+          }
+        }, 3000); // Check every second
+      });
+    }, itemCount);
 
-
-    res.status(200).json(JSON.parse(hotels));
-
+    return hotels;
   } catch (error) {
     console.log(error);
-    res.status(500).send({error})
-
+    return error;
   } finally {
     if (browser) {
       await browser.close();
     }
   }
- 
+}
+
+app.get("/api/letsgo", async (req, res) => {
+  const data = await scrapeLetsgoData(page, 10);
+
+  res.status(200).json(JSON.parse(data));
 });
 
 app.get("/", async (req, res) => {
