@@ -1,5 +1,7 @@
 const puppeteer = require("puppeteer-core");
 const chrome = require("@sparticuz/chromium-min");
+
+import {scraper} from './letsgo'
 // export const maxDuration = 30;
 
 const express = require("express");
@@ -101,6 +103,13 @@ app.get("/api/hotels", async (req, res) => {
   const hotels = await scrapeHotelData(checkin, checkout, adults, child);
 
   console.log(url);
+
+  res.json(JSON.parse(hotels));
+});
+
+app.get("/api/letsgo", async (req, res) => {
+
+  const hotels = await scraper()
 
   res.json(JSON.parse(hotels));
 });
