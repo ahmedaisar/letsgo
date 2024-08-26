@@ -31,17 +31,17 @@ module.exports = async (req, res) => {
     );
 
     browser = await puppeteer.launch({
-      args: [
-        // Example additional command line arguments
-        "--disable-software-rasterizer", // Disable the software rasterizer
-        "--disable-infobars", // Disable the yellow infobar that appears on the top of the browser
-        "--disable-dev-shm-usage", // Disable /dev/shm usage (for systems with low shared memory)
-        "--no-sandbox", // Disable the sandbox for running in containerized environments
-        "--no-experiments",
-        "--disable-client-side-phishing-detection",
-        "--disable-sync",
-        "--disable-extensions"        
-      ],
+      // args: [
+      //   // Example additional command line arguments
+      //   "--disable-software-rasterizer", // Disable the software rasterizer
+      //   "--disable-infobars", // Disable the yellow infobar that appears on the top of the browser
+      //   "--disable-dev-shm-usage", // Disable /dev/shm usage (for systems with low shared memory)
+      //   "--no-sandbox", // Disable the sandbox for running in containerized environments
+      //   "--no-experiments",
+      //   "--disable-client-side-phishing-detection",
+      //   "--disable-sync",
+      //   "--disable-extensions"        
+      // ],
       executablePath: executablePath,
       headless: false,
       ignoreHTTPSErrors: true,
