@@ -195,7 +195,8 @@ async function scrapeLetsgoData(page, itemCount = 15) {
 
 app.get("/api/letsgo", async (req, res) => {
 
-  let browser;
+  let browser
+  let hotels
 
   try {
     const executablePath = await chrome.executablePath(
@@ -240,7 +241,7 @@ app.get("/api/letsgo", async (req, res) => {
     await performSearch(page);
     await page.waitForSelector(".hotel-list-item-wrapper");
 
-    const hotels = await scrapeLetsgoData(page, 10);
+    hotels = await scrapeLetsgoData(page, 10);
 
 
     res.status(200).json(JSON.parse(hotels));
@@ -254,10 +255,7 @@ app.get("/api/letsgo", async (req, res) => {
       await browser.close();
     }
   }
-
-  const hotels = await scrapeLetsgoData()
-
-  res.json(JSON.parse(hotels));
+ 
 });
 
 app.get("/", async (req, res) => {
