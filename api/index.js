@@ -153,6 +153,10 @@ async function scrapeLetsgoData(itemCount = 10) {
     );
 
     browser = await puppeteer.launch({
+      args: [
+        ...chrome.args,
+        "--no-sandbox",
+      ],
       executablePath: executablePath,
       headless: true,
       ignoreHTTPSErrors: true,
