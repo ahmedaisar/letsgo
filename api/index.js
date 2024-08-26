@@ -20,7 +20,7 @@ async function scrapeHotelData(checkin, checkout, adults, child) {
       args: [...chrome.args, "--hide-scrollbars", "--disable-web-security"],
       defaultViewport: chrome.defaultViewport,
       executablePath: executablePath,
-      headless: false,
+      headless: true,
       ignoreHTTPSErrors: true,
       dumpio: true,
     });
@@ -51,7 +51,6 @@ async function scrapeHotelData(checkin, checkout, adults, child) {
       child ? child : ""
     }`;
     await page.goto(searchUrl, { waitUntil: "domcontentloaded" });
-    await page.waitForSelector("body");
 
     await page.goto(
       `https://hotelscan.com/combiner?pos=zz&locale=en&checkin=${checkin}&checkout=${checkout}&rooms=${adults}${
