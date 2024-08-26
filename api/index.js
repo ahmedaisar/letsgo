@@ -7,9 +7,9 @@ const app = express();
 const port = 3000;
 
 async function scrapeHotelData(checkin, checkout, adults, child) {
-  // Construct the search URL
-  
-  let browser;
+    
+  let browser
+  let json
 
   try {
     const executablePath = await chrome.executablePath(
@@ -27,7 +27,7 @@ async function scrapeHotelData(checkin, checkout, adults, child) {
 
     const page = await browser.newPage();
 
-    //await page.setUserAgent(ua);
+    await page.setUserAgent(ua);
 
     await page.setRequestInterception(true);
 
@@ -47,20 +47,26 @@ async function scrapeHotelData(checkin, checkout, adults, child) {
       }
     });
 
-    const searchUrl = `https://hotelscan.com/en/search?geoid=x5p4hmhw6iot&checkin=${checkin}&checkout=${checkout}&rooms=${adults}${
-      child ? child : ""
-    }`;
+    const searchUrl = `https://hotelscan.com/en/search?geoid=x5p4hmhw6iot&checkin=${checkin}&checkout=${checkout}&rooms=${adults}${child ? child : ""}`;
     await page.goto(searchUrl, { waitUntil: "domcontentloaded" });
 
     await page.goto(
-      `https://hotelscan.com/combiner?pos=zz&locale=en&checkin=${checkin}&checkout=${checkout}&rooms=${adults}${
-        child ? child : ""
-      }&mobile=0&loop=3&country=MV&ef=1&geoid=xmmmamtksdxx&toas=hotel%2Cbed_and_breakfast%2Cguest_house%2Cresort&deviceNetwork=4g&deviceCpu=20&deviceMemory=8&limit=25&offset=0z`,
+      `https://hotelscan.com/combiner?pos=zz&locale=en&checkin=${checkin}&checkout=${checkout}&rooms=${adults}${child ? child : ""}&mobile=0&loop=3&country=MV&ef=1&geoid=xmmmamtksdxx&toas=hotel%2Cbed_and_breakfast%2Cguest_house%2Cresort&deviceNetwork=4g&deviceCpu=20&deviceMemory=8&limit=25&offset=0`,
       { waitUntil: "networkidle2" }
     );
-    const body = await page.waitForSelector("body");
 
-    let json = await body?.evaluate((el) => el.textContent);
+    await page.on("response", async (response) => {
+      if (
+        response.url().includes ==
+        `https://hotelscan.com/combiner?pos=zz&locale=en&checkin=${checkin}&checkout=${checkout}&rooms=${adults}${child ? child : ""}&mobile=0&loop=3&country=MV&ef=1&geoid=xmmmamtksdxx&toas=hotel%2Cbed_and_breakfast%2Cguest_house%2Cresort&deviceNetwork=4g&deviceCpu=20&deviceMemory=8&limit=25&offset=0`
+      ) {
+        console.log("received, awaiting log...");
+        data = await response.json();
+      }
+    });
+    // const body = await page.waitForSelector("body");
+
+    // let json = await body?.evaluate((el) => el.textContent);
 
     return json;
     
