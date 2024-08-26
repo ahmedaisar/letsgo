@@ -88,6 +88,8 @@ app.get("/api/hotels", async (req, res) => {
   res.json(hotels);
 });
 
+app.get("/", async (req, res) => { res.send("hello")})
+
 app.listen(port, () => {
   console.log(`App listening on port ${port}`)
 })
