@@ -1,5 +1,4 @@
-const fetch = require('node-fetch');
-
+ 
 module.exports = async (req, res) => {
   const { checkin, checkout, adults, child } = req.query;
 
