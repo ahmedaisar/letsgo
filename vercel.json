@@ -9,13 +9,6 @@
       }
     },
     {
-      "src": "/api/letsgo",
-      "dest": "api/letsgo/index.js",
-      "headers": {
-        "Access-Control-Allow-Origin": "*"
-      }
-    },
-    {
       "src": "/api/hs",
       "dest": "api/hs/index.js",
       "headers": {

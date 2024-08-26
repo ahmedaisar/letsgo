@@ -1,27 +1,49 @@
-const fetch = require('node-fetch');
+const puppeteer = require("puppeteer-core");
+const chromium = require("@sparticuz/chromium-min");
+
+export const maxDuration = 30;
 
 module.exports = async (req, res) => {
+  let browser
   const { checkin, checkout, adults, child } = req.query;
 
-  try {
-    const searchUrl = `https://hotelscan.com/combiner?pos=zz&locale=en&checkin=${checkin}&checkout=${checkout}&rooms=${adults}${child ? child : ''}&mobile=0&loop=3&country=MV&ef=1&geoid=xmmmamtksdxx&toas=hotel%2Cbed_and_breakfast%2Cguest_house%2Cresort&deviceNetwork=4g&deviceCpu=20&deviceMemory=8&limit=25&offset=0z`;
+  chromium.setHeadlessMode = true;
 
-    const response = await fetch(searchUrl, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
-        'Accept': 'application/json',
-      },
+  chromium.setGraphicsMode = false;
+
+  const executablePath = await chromium.executablePath(
+    `https://github.com/Sparticuz/chromium/releases/download/v123.0.1/chromium-v123.0.1-pack.tar`
+  );
+
+  try {
+    browser = await puppeteer.launch({
+      executablePath: executablePath,
+      headless: true,
     });
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
+    const page = await browser.newPage();
+    await page.setRequestInterception(true);
+    await page.on("request", (request) => {
+      if (["image", "stylesheet", "font"].includes(request.resourceType())) {
+        request.abort();
+      } else {
+        request.continue();
+      }
+    });
 
-    const data = await response.json();
+    // Your scraping logic here
+    const searchUrl = `https://hotelscan.com/combiner?pos=zz&locale=en&checkin=${checkin}&checkout=${checkout}&rooms=${adults}${child ? child : ""}&mobile=0&loop=3&country=MV&ef=1&geoid=xmmmamtksdxx&toas=hotel%2Cbed_and_breakfast%2Cguest_house%2Cresort&deviceNetwork=4g&deviceCpu=20&deviceMemory=8&limit=25&offset=0z`;
+    await page.goto(searchUrl, { waitUntil: "networkidle2" });
 
-    res.status(200).json(data);
+    const json = await page.evaluate(() => document.body.textContent);
+    res.status(200).json(JSON.parse(json));
+
   } catch (error) {
-    console.error('Error:', error);
-    res.status(500).json({ error});
+    console.error(error);
+    res.status(500).json(error);
+  } finally {
+    if (browser) {
+      await browser.close();
+    }
   }
 };
