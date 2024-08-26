@@ -14,8 +14,7 @@ module.exports = async (req, res) => {
 
   try {
     browser = await puppeteer.launch({
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
-      defaultViewport: chrome.defaultViewport,
+      args: ['--no-sandbox'],
       executablePath: executablePath,
       headless: true,
     });
