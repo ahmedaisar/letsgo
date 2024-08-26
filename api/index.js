@@ -144,7 +144,7 @@ async function performSearch(page) {
   ]);
 }
 
-async function scrapeLetsgoData(itemCount = 15) {
+async function scrapeLetsgoData(itemCount = 10) {
   let browser;
 
   try {
@@ -153,17 +153,6 @@ async function scrapeLetsgoData(itemCount = 15) {
     );
 
     browser = await puppeteer.launch({
-     args: [
-      ...chrome.args,
-        "--disable-gpu",
-        "--disable-dev-shm-usage",
-        "--disable-setuid-sandbox",
-        "--no-first-run",
-        "--no-sandbox",
-        "--no-zygote",
-        "--disable-web-security",
-        "--disable-features=IsolateOrigins,site-per-process"
-      ],
       executablePath: executablePath,
       headless: true,
       ignoreHTTPSErrors: true,
@@ -197,54 +186,51 @@ async function scrapeLetsgoData(itemCount = 15) {
     await page.evaluate((itemCount) => {
       return new Promise((resolve) => {
         const hotels = [];
-        const intervalId = setInterval(() => {
-          const rows = document.querySelectorAll(".hotel-list-item-wrapper");
-          rows.forEach((row, index) => {
-            if (
-              index < itemCount &&
-              !hotels.some(
-                (h) =>
-                  h.name ===
-                  row
-                    .querySelector(".hotel-card__title-link-td-name")
-                    .textContent.trim()
-              )
-            ) {
-              const hotel = {
-                checkIn: row
-                  .querySelector("td:nth-child(1)")
-                  .textContent.trim(),
-                nights: row.querySelector("td:nth-child(2)").textContent.trim(),
-                name: row
+        const rows = document.querySelectorAll(".hotel-list-item-wrapper");
+        rows.forEach((row, index) => {
+          if (
+            index < itemCount &&
+            !hotels.some(
+              (h) =>
+                h.name ===
+                row
                   .querySelector(".hotel-card__title-link-td-name")
-                  .textContent.trim(),
-                location: row
-                  .querySelector(".hotel-card__location-link--resort")
-                  .textContent.trim(),
-                roomType: row
-                  .querySelector("td:nth-child(4)")
-                  .textContent.trim(),
-                mealPlan: row
-                  .querySelector("td:nth-child(5)")
-                  .textContent.trim(),
-                availability: row
-                  .querySelector("td:nth-child(6)")
-                  .textContent.trim(),
-                price: row
-                  .querySelector(".hotel-card__price")
-                  .textContent.trim(),
-                currency: row
-                  .querySelector(".hotel-card__price-currency")
-                  .textContent.trim(),
-              };
-              hotels.push(hotel);
-            }
-          });
-          if (hotels.length >= itemCount) {
-            clearInterval(intervalId);
-            resolve(hotels);
+                  .textContent.trim()
+            )
+          ) {
+            const hotel = {
+              checkIn: row
+                .querySelector("td:nth-child(1)")
+                .textContent.trim(),
+              nights: row.querySelector("td:nth-child(2)").textContent.trim(),
+              name: row
+                .querySelector(".hotel-card__title-link-td-name")
+                .textContent.trim(),
+              location: row
+                .querySelector(".hotel-card__location-link--resort")
+                .textContent.trim(),
+              roomType: row
+                .querySelector("td:nth-child(4)")
+                .textContent.trim(),
+              mealPlan: row
+                .querySelector("td:nth-child(5)")
+                .textContent.trim(),
+              availability: row
+                .querySelector("td:nth-child(6)")
+                .textContent.trim(),
+              price: row
+                .querySelector(".hotel-card__price")
+                .textContent.trim(),
+              currency: row
+                .querySelector(".hotel-card__price-currency")
+                .textContent.trim(),
+            };
+            hotels.push(hotel);
           }
-        }, 2000); // Check every second
+        });
+        if (hotels.length >= itemCount) {
+          resolve(hotels);
+        }
       });
     }, itemCount);
 
