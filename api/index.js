@@ -27,7 +27,6 @@ async function scrapeHotelData(checkin, checkout, adults, child) {
 
     const page = await browser.newPage();
 
-    await page.setUserAgent(ua);
 
     await page.setRequestInterception(true);
 
