@@ -9,8 +9,6 @@ module.exports = async (req, res) => {
 
   chromium.setHeadlessMode = true;
 
-  chromium.setGraphicsMode = false;
-
   const executablePath = await chromium.executablePath(
     `https://github.com/Sparticuz/chromium/releases/download/v123.0.1/chromium-v123.0.1-pack.tar`
   );
@@ -23,14 +21,6 @@ module.exports = async (req, res) => {
     });
 
     const page = await browser.newPage();
-    await page.setRequestInterception(true);
-    await page.on("request", (request) => {
-      if (["image", "stylesheet", "font"].includes(request.resourceType())) {
-        request.abort();
-      } else {
-        request.continue();
-      }
-    });
 
     // Your scraping logic here
     const searchUrl = `https://hotelscan.com/combiner?pos=zz&locale=en&checkin=${checkin}&checkout=${checkout}&rooms=${adults}${child ? child : ""}&mobile=0&loop=3&country=MV&ef=1&geoid=xmmmamtksdxx&toas=hotel%2Cbed_and_breakfast%2Cguest_house%2Cresort&deviceNetwork=4g&deviceCpu=20&deviceMemory=8&limit=25&offset=0z`;
