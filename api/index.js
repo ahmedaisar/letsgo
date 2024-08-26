@@ -13,7 +13,7 @@ async function scrapeHotelData(checkin, checkout, adults, child) {
 
   try {
     const executablePath = await chrome.executablePath(
-      `https://github.com/Sparticuz/chromium/releases/download/v117.0.0/chromium-v117.0.0-pack.tar`
+      `https://github.com/Sparticuz/chromium/releases/download/v123.0.0/chromium-v123.0.0-pack.tar`
     );
 
     browser = await puppeteer.launch({
