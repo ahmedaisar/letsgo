@@ -1,5 +1,5 @@
 const puppeteer = require("puppeteer-core");
-const chrome = require("@sparticuz/chromium-min");
+const chromium = require("@sparticuz/chromium-min");
 
 export const maxDuration = 30;
 
@@ -11,7 +11,7 @@ module.exports = async (req, res) => {
 
   chromium.setGraphicsMode = false;
 
-  const executablePath = await chrome.executablePath(
+  const executablePath = await chromium.executablePath(
     `https://github.com/Sparticuz/chromium/releases/download/v123.0.1/chromium-v123.0.1-pack.tar`
   );
 
