@@ -4,90 +4,45 @@ const chrome = require("@sparticuz/chromium-min");
 export const maxDuration = 30
  
  
-async function scrapeHotelData(page, checkin, checkout, adults, child) {
-   // Construct the search URL
-  const searchUrl = `https://hotelscan.com/en/search?geoid=x5p4hmhw6iot&checkin=${checkin}&checkout=${checkput}&rooms=${adults}${child}`;
-
-
-  await page.goto(searchUrl, { waitUntil: "domcontentloaded" })
-
-  await page.goto(`https://hotelscan.com/combiner?pos=zz&locale=en&checkin=${checkin}&checkout=${checkout}&rooms=${adults}${child ? child : ''}&mobile=0&loop=3&country=MV&ef=1&geoid=xmmmamtksdxx&toas=hotel%2Cbed_and_breakfast%2Cguest_house%2Cresort&deviceNetwork=4g&deviceCpu=20&deviceMemory=8&limit=25&offset=0z`, { waitUntil: 'networkidle2' })
-
-  let body = await page.waitForSelector('body');
-  let json = await body?.evaluate(el => el.textContent);
-
-  return json
-
-}
-
- 
 module.exports = async (req, res) => {
-  let browser;
+  let browser = null;
   const { checkin, checkout, adults, child } = req.query;
- 
-  try {
-    const executablePath = await chrome.executablePath(
-      `https://github.com/Sparticuz/chromium/releases/download/v123.0.1/chromium-v123.0.1-pack.tar`
-    );
 
+  const executablePath = await chrome.executablePath(
+    `https://github.com/Sparticuz/chromium/releases/download/v123.0.1/chromium-v123.0.1-pack.tar`
+  );
+
+  try {
     browser = await puppeteer.launch({
+      args: chrome.args,
+      defaultViewport: chrome.defaultViewport,
       executablePath: executablePath,
       headless: true,
     });
 
     const page = await browser.newPage();
-
-    //await page.setUserAgent(ua);
-
     await page.setRequestInterception(true);
-
-    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36')
-
-    await page.on("request", async (request) => {
-      if (
-        request.resourceType() === "image" ||
-        request.resourceType() === "media" ||
-        request.resourceType() === "font"
-      ) {
+    page.on('request', (request) => {
+      if (['image', 'stylesheet', 'font'].includes(request.resourceType())) {
         request.abort();
       } else {
         request.continue();
       }
     });
 
+    // Your scraping logic here
+    const searchUrl = `https://hotelscan.com/combiner?pos=zz&locale=en&checkin=${checkin}&checkout=${checkout}&rooms=${adults}${child ? child : ''}&mobile=0&loop=3&country=MV&ef=1&geoid=xmmmamtksdxx&toas=hotel%2Cbed_and_breakfast%2Cguest_house%2Cresort&deviceNetwork=4g&deviceCpu=20&deviceMemory=8&limit=25&offset=0z`;
+    await page.goto(searchUrl, { waitUntil: 'networkidle2' });
 
-    const hotels = await scrapeHotelData(page, checkin, checkout, adults, child);
- 
-    res.status(200).json(hotels);
+    const json = await page.evaluate(() => document.body.textContent);
+
+    res.status(200).json(JSON.parse(json));
   } catch (error) {
-    console.log(error);
-    res.statusCode = 500;
-    res.json({
-      body: "Sorry, Something went wrong!",
-    });
+    console.error(error);
+    res.status(500).json({ error});
   } finally {
-    if (browser) {
+    if (browser !== null) {
       await browser.close();
     }
   }
 };
-
-
-// async function scrapeHotelData(page, checkin, checkout, adults, child) {
-//   // Construct the search URL
-//   const searchUrl = `https://hotelscan.com/en/search?geoid=x5p4hmhw6iot&checkin=${checkin}&checkout=${checkput}&rooms=${adults}${child}`;
-
-//   await page.goto(searchUrl, { waitUntil: "domcontentloaded" });
-
-//   await page.goto(
-//     `https://hotelscan.com/combiner?pos=zz&locale=en&checkin=${checkin}&checkout=${checkout}&rooms=${adults}${
-//       child ? child : ""
-//     }&mobile=0&loop=3&country=MV&ef=1&geoid=xmmmamtksdxx&toas=hotel%2Cbed_and_breakfast%2Cguest_house%2Cresort&deviceNetwork=4g&deviceCpu=20&deviceMemory=8&limit=25&offset=0z`,
-//     { waitUntil: "networkidle0" }
-//   );
-
-//   let body = await page.waitForSelector("body");
-//   let json = await body?.evaluate((el) => el.textContent);
-
-//   return json;
-// }
