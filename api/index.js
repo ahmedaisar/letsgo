@@ -7,9 +7,8 @@ const app = express();
 const port = 3000;
 
 async function scrapeHotelData(checkin, checkout, adults, child) {
-    
-  let browser
-  let json
+  let browser;
+  let json;
 
   try {
     const executablePath = await chrome.executablePath(
@@ -17,7 +16,15 @@ async function scrapeHotelData(checkin, checkout, adults, child) {
     );
 
     browser = await puppeteer.launch({
-      args: [...chrome.args, "--hide-scrollbars", "--disable-web-security", "--no-sandbox"],
+      args: [
+        ...chrome.args,
+        "--disable-gpu",
+        "--disable-dev-shm-usage",
+        "--disable-setuid-sandbox",
+        "--no-first-run",
+        "--no-sandbox",
+        "--no-zygote",
+      ],
       defaultViewport: {
         width: 375,
         height: 667,
@@ -30,7 +37,6 @@ async function scrapeHotelData(checkin, checkout, adults, child) {
     });
 
     const page = await browser.newPage();
-
 
     await page.setRequestInterception(true);
 
@@ -50,21 +56,18 @@ async function scrapeHotelData(checkin, checkout, adults, child) {
       }
     });
 
-    const searchUrl = `https://hotelscan.com/en/search?geoid=x5p4hmhw6iot&checkin=${checkin}&checkout=${checkout}&rooms=${adults}${child ? child : ""}&toas=hotel,resort,guest_house&stars=5,4,3`
+    const searchUrl = `https://hotelscan.com/en/search?geoid=x5p4hmhw6iot&checkin=${checkin}&checkout=${checkout}&rooms=${adults}${
+      child ? child : ""
+    }&toas=hotel,resort,guest_house&stars=5,4,3`;
 
     await page.goto(searchUrl, { waitUntil: "load" });
 
     await page.goto(
-      `https://hotelscan.com/combiner?pos=zz&locale=en&checkin=${checkin}&checkout=${checkout}&rooms=${adults}${child ? child : ""}&mobile=1&loop=10&availability=1&country=MV&ef=1&geoid=x5p4hmhw6iot&toas=hotel%2Cbed_and_breakfast%2Cguest_house%2Cresort&deviceNetwork=4g&deviceCpu=20&deviceMemory=8&limit=25&offset=0`,
-      { waitUntil: "networkidle1" }
-    );
-
-    await page.goto(
-      `https://hotelscan.com/combiner?pos=zz&locale=en&checkin=${checkin}&checkout=${checkout}&rooms=${adults}${child ? child : ""}&mobile=1&loop=10&availability=1&country=MV&ef=1&geoid=x5p4hmhw6iot&toas=hotel%2Cbed_and_breakfast%2Cguest_house%2Cresort&deviceNetwork=4g&deviceCpu=20&deviceMemory=8&limit=25&offset=0`,
+      `https://hotelscan.com/combiner?pos=zz&locale=en&checkin=${checkin}&checkout=${checkout}&rooms=${adults}${
+        child ? child : ""
+      }&mobile=1&loop=10&availability=1&country=MV&ef=1&geoid=x5p4hmhw6iot&toas=hotel%2Cbed_and_breakfast%2Cguest_house%2Cresort&deviceNetwork=4g&deviceCpu=20&deviceMemory=8&limit=25&offset=0`,
       { waitUntil: "networkidle0" }
     );
-
-  
 
     // await page.on("response", async (response) => {
     //   if (
@@ -79,9 +82,8 @@ async function scrapeHotelData(checkin, checkout, adults, child) {
     let json = await body?.evaluate((el) => el.textContent);
 
     return json;
-    
   } catch (error) {
-    console.log(error);    
+    console.log(error);
   } finally {
     if (browser) {
       await browser.close();
@@ -90,28 +92,26 @@ async function scrapeHotelData(checkin, checkout, adults, child) {
 }
 
 app.get("/api/hotels", async (req, res) => {
-
   const { checkin, checkout, adults, child } = req.query;
 
-  const url = `https://hotelscan.com/combiner?pos=zz&locale=en&checkin=${checkin}&checkout=${checkout}&rooms=${adults}${child ? child : ""}&mobile=1&loop=10&availability=1&country=MV&ef=1&geoid=x5p4hmhw6iot&toas=hotel%2Cbed_and_breakfast%2Cguest_house%2Cresort&deviceNetwork=4g&deviceCpu=20&deviceMemory=8&limit=25&offset=0`
+  const url = `https://hotelscan.com/combiner?pos=zz&locale=en&checkin=${checkin}&checkout=${checkout}&rooms=${adults}${
+    child ? child : ""
+  }&mobile=1&loop=10&availability=1&country=MV&ef=1&geoid=x5p4hmhw6iot&toas=hotel%2Cbed_and_breakfast%2Cguest_house%2Cresort&deviceNetwork=4g&deviceCpu=20&deviceMemory=8&limit=25&offset=0`;
 
-  const hotels = await scrapeHotelData(
-    checkin,
-    checkout,
-    adults,
-    child
-  );
+  const hotels = await scrapeHotelData(checkin, checkout, adults, child);
 
-  console.log(url)
+  console.log(url);
 
   res.json(JSON.parse(hotels));
 });
 
-app.get("/", async (req, res) => { res.send("hello")})
+app.get("/", async (req, res) => {
+  res.send("hello");
+});
 
 app.listen(port, () => {
-  console.log(`App listening on port ${port}`)
-})
+  console.log(`App listening on port ${port}`);
+});
 
 // module.exports = async (req, res) => {
 //   let browser;
