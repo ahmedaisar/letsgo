@@ -17,7 +17,12 @@ async function scrapeHotelData(checkin, checkout, adults, child) {
     );
 
     browser = await puppeteer.launch({
-
+      args: [...chrome.args, "--hide-scrollbars", "--disable-web-security", "--no-sandbox"],
+      defaultViewport: {
+        width: 375,
+        height: 667,
+        isMobile: true,
+      },
       executablePath: executablePath,
       headless: true,
       ignoreHTTPSErrors: true,
@@ -56,7 +61,7 @@ async function scrapeHotelData(checkin, checkout, adults, child) {
 
     await page.on("response", async (response) => {
       if (
-        response.url().includes('/combiner?pos=zz')
+        response.url().includes('https://hotelscan.com/combiner')
       ) {
         console.log("received, awaiting log...");
         data = await response.json();
