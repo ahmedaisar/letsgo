@@ -155,12 +155,7 @@ async function scrapeLetsgoData(itemCount = 15) {
     browser = await puppeteer.launch({
       args: [
         ...chrome.args,
-        "--disable-gpu",
-        "--disable-dev-shm-usage",
-        "--disable-setuid-sandbox",
-        "--no-first-run",
-        "--no-sandbox",
-        "--no-zygote",
+        "--no-sandbox"
       ],
       executablePath: executablePath,
       headless: true,
@@ -242,7 +237,7 @@ async function scrapeLetsgoData(itemCount = 15) {
             clearInterval(intervalId);
             resolve(hotels);
           }
-        }, 3000); // Check every second
+        }, 2000); // Check every second
       });
     }, itemCount);
 
