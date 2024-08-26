@@ -14,15 +14,13 @@ module.exports = async (req, res) => {
 
   try {
     browser = await puppeteer.launch({
-      args: chrome.args,
-      defaultViewport: chrome.defaultViewport,
       executablePath: executablePath,
       headless: true,
     });
 
     const page = await browser.newPage();
     await page.setRequestInterception(true);
-    page.on('request', (request) => {
+    await page.on('request', (request) => {
       if (['image', 'stylesheet', 'font'].includes(request.resourceType())) {
         request.abort();
       } else {
