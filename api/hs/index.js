@@ -31,11 +31,8 @@ module.exports = async (req, res) => {
     );
 
     browser = await puppeteer.launch({
-      args: ['--no-sandbox'],
       executablePath: executablePath,
       headless: true,
-      ignoreHTTPSErrors: true,
-      dumpio: true
     });
 
     const page = await browser.newPage();
