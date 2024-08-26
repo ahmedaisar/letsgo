@@ -154,7 +154,13 @@ async function scrapeLetsgoData(itemCount = 15) {
 
     browser = await puppeteer.launch({
      args: [
-        ...chrome.args,
+      ...chrome.args,
+        "--disable-gpu",
+        "--disable-dev-shm-usage",
+        "--disable-setuid-sandbox",
+        "--no-first-run",
+        "--no-sandbox",
+        "--no-zygote",
         "--disable-web-security",
         "--disable-features=IsolateOrigins,site-per-process"
       ],
