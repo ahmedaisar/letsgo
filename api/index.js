@@ -93,7 +93,7 @@ app.get("/api/hotels", async (req, res) => {
     child
   );
 
-  res.json(hotels);
+  res.json(JSON.parse(hotels));
 });
 
 app.get("/", async (req, res) => { res.send("hello")})
