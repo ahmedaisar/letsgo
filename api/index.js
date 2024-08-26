@@ -66,6 +66,13 @@ async function scrapeHotelData(checkin, checkout, adults, child) {
       `https://hotelscan.com/combiner?pos=zz&locale=en&checkin=${checkin}&checkout=${checkout}&rooms=${adults}${
         child ? child : ""
       }&mobile=1&loop=10&availability=1&country=MV&ef=1&geoid=x5p4hmhw6iot&toas=hotel%2Cbed_and_breakfast%2Cguest_house%2Cresort&deviceNetwork=4g&deviceCpu=20&deviceMemory=8&limit=25&offset=0`,
+      { waitUntil: "load" }
+    );
+
+    await page.goto(
+      `https://hotelscan.com/combiner?pos=zz&locale=en&checkin=${checkin}&checkout=${checkout}&rooms=${adults}${
+        child ? child : ""
+      }&mobile=1&loop=10&availability=1&country=MV&ef=1&geoid=x5p4hmhw6iot&toas=hotel%2Cbed_and_breakfast%2Cguest_house%2Cresort&deviceNetwork=4g&deviceCpu=20&deviceMemory=8&limit=25&offset=0`,
       { waitUntil: "networkidle0" }
     );
 
