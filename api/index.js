@@ -70,11 +70,11 @@ async function scrapeHotelData(checkin, checkout, adults, child) {
       child ? child : ""
     }&mobile=1&loop=10&availability=1&country=MV&ef=1&geoid=x5p4hmhw6iot&toas=hotel%2Cbed_and_breakfast%2Cguest_house%2Cresort&deviceNetwork=4g&deviceCpu=20&deviceMemory=8&limit=25&offset=0`;
 
-    await page.goto(searchUrl, { waitUntil: "load" });
+    await page.goto(searchUrl, { waitUntil: "domcontentloaded", timeout: "10000" });
 
-    await page.goto(xhrUrl, { waitUntil: "domcontentloaded" });
+    await page.goto(xhrUrl, { waitUntil: "networkidle0", timeout: "10000" });
 
-    await page.goto(xhrUrl, { waitUntil: "networkidle0" });
+    await page.goto(xhrUrl, { waitUntil: "networkidle0", timeout: "10000" });
 
     const body = await page.waitForSelector("body");
 
