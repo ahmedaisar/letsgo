@@ -163,6 +163,8 @@ async function scrapeLetsgoData(itemCount = 10) {
       args: [
         ...chrome.args,
         "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-web-security",
       ],
       executablePath: executablePath,
       headless: true,
