@@ -65,23 +65,16 @@ async function scrapeHotelData(checkin, checkout, adults, child) {
       child ? child : ""
     }&mobile=1&loop=10&availability=1&country=MV&ef=1&geoid=x5p4hmhw6iot&toas=hotel%2Cbed_and_breakfast%2Cguest_house%2Cresort&deviceNetwork=4g&deviceCpu=20&deviceMemory=8&limit=25&offset=0`;
 
-    await page.goto(searchUrl, { waitUntil: "load" });
+    await page.goto(searchUrl, { waitUntil: "networkidle0" });
 
-    await page.goto(xhrurl, { waitUntil: "networkidle0" });
+    // await page.goto(xhrurl, { waitUntil: "networkidle0" });
 
-    const firstResponse = await page.waitForResponse(xhrurl);
-    const finalResponse = await page.waitForResponse(response =>
-      response.url() === xhrurl && response.status() === 200
-    );
-     
-    hotels = finalResponse.json();
-
-    // await page.on("response", async (response) => {
-    //   if (response.url().includes("https://hotelscan.com/combiner")) {
-    //     console.log("received, awaiting log...");
-    //     data = await response.json();
-    //   }
-    // });
+    await page.on("response", async (response) => {
+      if (response.url().includes("/combiner")) {
+        console.log("received, awaiting log...");
+        hotels = await response.json();
+      }
+    });
     // const body = await page.waitForSelector("body");
 
     // let json = await body?.evaluate((el) => el.textContent);
