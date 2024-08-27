@@ -41,9 +41,13 @@ async function scrapeHotelData(checkin, checkout, adults, child) {
 
     await page.setRequestInterception(true);
 
-    await page.setUserAgent(
-      "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Mobile Safari/537.36"
-    );
+    const ua = await page.evaluate("navigator.userAgent");
+
+    await page.setUserAgent(ua);
+
+    // await page.setUserAgent(
+    //   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36"
+    // );
 
     await page.on("request", async (request) => {
       if (
@@ -57,35 +61,21 @@ async function scrapeHotelData(checkin, checkout, adults, child) {
       }
     });
 
-    const searchUrl = `https://hotelscan.com/en/search?geoid=x5p4hmhw6iot&checkin=${checkin}&checkout=${checkout}&rooms=${adults}${child ? child : ""}&toas=hotel,resort,guest_house&stars=5,4,3`;
+    const searchUrl = `https://hotelscan.com/en/search?geoid=x5p4hmhw6iot&checkin=${checkin}&checkout=${checkout}&rooms=${adults}${
+      child ? child : ""
+    }&toas=hotel,resort,guest_house&stars=5,4,3`;
 
-    const xhrurl = `https://hotelscan.com/combiner?pos=zz&locale=en&checkin=${checkin}&checkout=${checkout}&rooms=${adults}${child ? child : ""}&mobile=1&loop=10&availability=1&country=MV&ef=1&geoid=x5p4hmhw6iot&toas=hotel%2Cbed_and_breakfast%2Cguest_house%2Cresort&deviceNetwork=4g&deviceCpu=20&deviceMemory=8&limit=25&offset=0`;
+    const xhrUrl = `https://hotelscan.com/combiner?pos=zz&locale=en&checkin=${checkin}&checkout=${checkout}&rooms=${adults}${
+      child ? child : ""
+    }&mobile=1&loop=10&availability=1&country=MV&ef=1&geoid=x5p4hmhw6iot&toas=hotel%2Cbed_and_breakfast%2Cguest_house%2Cresort&deviceNetwork=4g&deviceCpu=20&deviceMemory=8&limit=25&offset=0`;
 
-    await page.goto(searchUrl, { waitUntil: "domcontentloaded" });
+    await page.goto(searchUrl, { waitUntil: "load" });
 
-    const page2 = await browser.newPage();
+    await page.goto(xhrUrl, { waitUntil: "domcontentloaded" });
 
-    await page2.setRequestInterception(true);
-
-    await page2.setUserAgent(
-      "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Mobile Safari/537.36"
-    );
-
-    await page2.on("request", async (request) => {
-      if (
-        request.resourceType() === "image" ||
-        request.resourceType() === "media" ||
-        request.resourceType() === "font"
-      ) {
-        request.abort();
-      } else {
-        request.continue();
-      }
-    });
-
-    await page2.goto(xhrurl, { waitUntil: "domcontentloaded" });
-
-    const body = await page2.waitForSelector("body");
+    await page.goto(xhrUrl, { waitUntil: "networkidle0" });
+ 
+    const body = await page.waitForSelector("body");
 
     hotels = await body?.evaluate((el) => el.textContent);
 
