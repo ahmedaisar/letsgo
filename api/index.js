@@ -19,16 +19,13 @@ async function scrapeHotelData(checkin, checkout, adults, child) {
     browser = await puppeteer.launch({
       args: [
         ...chrome.args,
+        "--disable-web-security",
         "--disable-gpu",
         "--disable-dev-shm-usage",
         "--disable-setuid-sandbox",
         "--no-first-run",
         "--no-sandbox",
         "--no-zygote",
-        "--blink-settings=imagesEnabled=false",
-        "--enable-privacy-sandbox-ads-apis",
-        "--disable-web-security",
-        "--disable-features=IsolateOrigins,site-per-process",
       ],
       defaultViewport: {
         width: 375,
@@ -73,15 +70,9 @@ async function scrapeHotelData(checkin, checkout, adults, child) {
 
     await page.goto(xhrurl, { waitUntil: "networkidle0" });
 
-    // await page.on("response", async (response) => {
-    //   if (response.url().includes("/combiner")) {
-    //     console.log("received, awaiting log...");
-    //     hotels = await response.json();
-    //   }
-    // });
     const body = await page.waitForSelector("body");
 
-    let json = await body?.evaluate((el) => el.textContent);
+    hotels = await body?.evaluate((el) => el.textContent);
 
     return hotels;
   } catch (error) {
