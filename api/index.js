@@ -9,6 +9,7 @@ const port = 3000;
 
 async function scrapeHotelData(checkin, checkout, adults, child) {
   let browser;
+  let hotels;
 
   try {
     const executablePath = await chrome.executablePath(
@@ -60,35 +61,33 @@ async function scrapeHotelData(checkin, checkout, adults, child) {
       child ? child : ""
     }&toas=hotel,resort,guest_house&stars=5,4,3`;
 
+    const xhrurl = `https://hotelscan.com/combiner?pos=zz&locale=en&checkin=${checkin}&checkout=${checkout}&rooms=${adults}${
+      child ? child : ""
+    }&mobile=1&loop=10&availability=1&country=MV&ef=1&geoid=x5p4hmhw6iot&toas=hotel%2Cbed_and_breakfast%2Cguest_house%2Cresort&deviceNetwork=4g&deviceCpu=20&deviceMemory=8&limit=25&offset=0`;
+
     await page.goto(searchUrl, { waitUntil: "load" });
 
-    await page.goto(
-      `https://hotelscan.com/combiner?pos=zz&locale=en&checkin=${checkin}&checkout=${checkout}&rooms=${adults}${
-        child ? child : ""
-      }&mobile=1&loop=10&availability=1&country=MV&ef=1&geoid=x5p4hmhw6iot&toas=hotel%2Cbed_and_breakfast%2Cguest_house%2Cresort&deviceNetwork=4g&deviceCpu=20&deviceMemory=8&limit=25&offset=0`,
-      { waitUntil: "load" }
+    await page.goto(xhrurl, {  waitUntil: "networkidle0" }
     );
 
-    await page.goto(
-      `https://hotelscan.com/combiner?pos=zz&locale=en&checkin=${checkin}&checkout=${checkout}&rooms=${adults}${
-        child ? child : ""
-      }&mobile=1&loop=10&availability=1&country=MV&ef=1&geoid=x5p4hmhw6iot&toas=hotel%2Cbed_and_breakfast%2Cguest_house%2Cresort&deviceNetwork=4g&deviceCpu=20&deviceMemory=8&limit=25&offset=0`,
-      { waitUntil: "networkidle0" }
+    const xhrRes = await page.waitForResponse(
+      (response) =>
+        response.url() === xhrurl && response.status() === 200
     );
+    
+    hotels = await xhrRes.json();
 
     // await page.on("response", async (response) => {
-    //   if (
-    //     response.url().includes('https://hotelscan.com/combiner')
-    //   ) {
+    //   if (response.url().includes("https://hotelscan.com/combiner")) {
     //     console.log("received, awaiting log...");
     //     data = await response.json();
     //   }
     // });
-    const body = await page.waitForSelector("body");
+    // const body = await page.waitForSelector("body");
 
-    let json = await body?.evaluate((el) => el.textContent);
+    // let json = await body?.evaluate((el) => el.textContent);
 
-    return json;
+    return hotels;
   } catch (error) {
     console.log(error);
   } finally {
