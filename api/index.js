@@ -67,15 +67,14 @@ async function scrapeHotelData(checkin, checkout, adults, child) {
 
     await page.goto(searchUrl, { waitUntil: "load" });
 
-    await page.goto(xhrurl, {  waitUntil: "networkidle0" }
-    );
+    await page.goto(xhrurl, { waitUntil: "networkidle0" });
 
-    const xhrRes = await page.waitForResponse(
-      (response) =>
-        response.url() === xhrurl && response.status() === 200
+    const firstResponse = await page.waitForResponse(xhrurl);
+    const finalResponse = await page.waitForResponse(response =>
+      response.url() === xhrurl && response.status() === 200
     );
-    
-    hotels = await xhrRes.json();
+     
+    hotels = await finalResponse.json();
 
     // await page.on("response", async (response) => {
     //   if (response.url().includes("https://hotelscan.com/combiner")) {
