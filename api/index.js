@@ -61,11 +61,31 @@ async function scrapeHotelData(checkin, checkout, adults, child) {
 
     const xhrurl = `https://hotelscan.com/combiner?pos=zz&locale=en&checkin=${checkin}&checkout=${checkout}&rooms=${adults}${child ? child : ""}&mobile=1&loop=10&availability=1&country=MV&ef=1&geoid=x5p4hmhw6iot&toas=hotel%2Cbed_and_breakfast%2Cguest_house%2Cresort&deviceNetwork=4g&deviceCpu=20&deviceMemory=8&limit=25&offset=0`;
 
-    await page.goto(searchUrl, { waitUntil: "networkidle0" });
+    await page.goto(searchUrl, { waitUntil: "domcontentload" });
 
-    await page.goto(xhrurl, { waitUntil: "networkidle0" });
+    const page2 = await browser.newPage();
 
-    const body = await page.waitForSelector("body");
+    await page2.setRequestInterception(true);
+
+    await page2.setUserAgent(
+      "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Mobile Safari/537.36"
+    );
+
+    await page2.on("request", async (request) => {
+      if (
+        request.resourceType() === "image" ||
+        request.resourceType() === "media" ||
+        request.resourceType() === "font"
+      ) {
+        request.abort();
+      } else {
+        request.continue();
+      }
+    });
+
+    await page2.goto(xhrurl, { waitUntil: "networkidle0" });
+
+    const body = await page2.waitForSelector("body");
 
     hotels = await body?.evaluate((el) => el.textContent);
 
