@@ -19,6 +19,7 @@ async function scrapeHotelData(checkin, checkout, adults, child) {
     browser = await puppeteer.launch({
       args: [
         ...chrome.args,
+        "--user-agent=Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1",
         "--disable-gpu",
         "--disable-dev-shm-usage",
         "--disable-setuid-sandbox",
@@ -41,9 +42,9 @@ async function scrapeHotelData(checkin, checkout, adults, child) {
 
     await page.setRequestInterception(true);
 
-    const ua = await page.evaluate("navigator.userAgent");
+    // const ua = await page.evaluate("navigator.userAgent");
 
-    await page.setUserAgent(ua);
+    // await page.setUserAgent(ua);
 
     // await page.setUserAgent(
     //   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36"
@@ -74,7 +75,7 @@ async function scrapeHotelData(checkin, checkout, adults, child) {
     await page.goto(xhrUrl, { waitUntil: "domcontentloaded" });
 
     await page.goto(xhrUrl, { waitUntil: "networkidle0" });
- 
+
     const body = await page.waitForSelector("body");
 
     hotels = await body?.evaluate((el) => el.textContent);
