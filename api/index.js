@@ -120,7 +120,7 @@ async function login(page) {
   );
   await Promise.all([
     page.$eval('button[type="submit"]', (el) => el.click()),
-    page.waitForNavigation({ waitUntil: "networkidle2" }),
+    page.waitForNavigation({ waitUntil: "domcontentloaded" }),
   ]);
 }
 
@@ -154,15 +154,19 @@ async function scrapeLetsgoData(itemCount = 10) {
     browser = await puppeteer.launch({
       args: [
         ...chrome.args,
-        "--no-sandbox",
-        "--disable-dev-shm-usage",
+        "--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
         "--disable-gpu",
-        "--blink-settings=imagesEnabled=false",
-        "--enable-privacy-sandbox-ads-apis",
+        "--disable-dev-shm-usage",
         "--disable-setuid-sandbox",
-        "--disable-web-security",
-        "--disable-features=IsolateOrigins,site-per-process",
+        "--no-first-run",
+        "--no-sandbox",
+        "--no-zygote",
       ],
+      defaultViewport: {
+        width: 375,
+        height: 667,
+        isMobile: true,
+      },
       executablePath: executablePath,
       headless: true,
       ignoreHTTPSErrors: true,
@@ -171,23 +175,19 @@ async function scrapeLetsgoData(itemCount = 10) {
 
     const page = await browser.newPage();
 
-    // await page.setRequestInterception(true);
+    await page.setRequestInterception(true);
 
-    await page.setUserAgent(
-      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36"
-    );
-
-    // await page.on("request", async (request) => {
-    //   if (
-    //     request.resourceType() === "image" ||
-    //     request.resourceType() === "media" ||
-    //     request.resourceType() === "font"
-    //   ) {
-    //     request.abort();
-    //   } else {
-    //     request.continue();
-    //   }
-    // });
+    await page.on("request", async (request) => {
+      if (
+        request.resourceType() === "image" ||
+        request.resourceType() === "media" ||
+        request.resourceType() === "font"
+      ) {
+        request.abort();
+      } else {
+        request.continue();
+      }
+    });
 
     await login(page);
     await performSearch(page);
