@@ -74,7 +74,7 @@ async function scrapeHotelData(checkin, checkout, adults, child) {
       response.url() === xhrurl && response.status() === 200
     );
      
-    hotels = await finalResponse.json();
+    hotels = finalResponse.json();
 
     // await page.on("response", async (response) => {
     //   if (response.url().includes("https://hotelscan.com/combiner")) {
