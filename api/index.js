@@ -163,8 +163,13 @@ async function scrapeLetsgoData(itemCount = 10) {
       args: [
         ...chrome.args,
         "--no-sandbox",
+        "--disable-dev-shm-usage",
+        "--disable-gpu",
+        "--blink-settings=imagesEnabled=false",
+        "--enable-privacy-sandbox-ads-apis",
         "--disable-setuid-sandbox",
         "--disable-web-security",
+        "--disable-features=IsolateOrigins,site-per-process",
       ],
       executablePath: executablePath,
       headless: true,
@@ -194,8 +199,8 @@ async function scrapeLetsgoData(itemCount = 10) {
 
     await login(page);
     await performSearch(page);
+    await page.waitForNavigation({ waitUntil: "domcontentloaded" });
     await page.waitForSelector(".hotel-list-item-wrapper");
-    await page.waitForNavigation({ waitUntil: "domcontentloaded" })
     await page.evaluate((itemCount) => {
       return new Promise((resolve) => {
         const hotels = [];
@@ -212,9 +217,7 @@ async function scrapeLetsgoData(itemCount = 10) {
             )
           ) {
             const hotel = {
-              checkIn: row
-                .querySelector("td:nth-child(1)")
-                .textContent.trim(),
+              checkIn: row.querySelector("td:nth-child(1)").textContent.trim(),
               nights: row.querySelector("td:nth-child(2)").textContent.trim(),
               name: row
                 .querySelector(".hotel-card__title-link-td-name")
@@ -222,18 +225,12 @@ async function scrapeLetsgoData(itemCount = 10) {
               location: row
                 .querySelector(".hotel-card__location-link--resort")
                 .textContent.trim(),
-              roomType: row
-                .querySelector("td:nth-child(4)")
-                .textContent.trim(),
-              mealPlan: row
-                .querySelector("td:nth-child(5)")
-                .textContent.trim(),
+              roomType: row.querySelector("td:nth-child(4)").textContent.trim(),
+              mealPlan: row.querySelector("td:nth-child(5)").textContent.trim(),
               availability: row
                 .querySelector("td:nth-child(6)")
                 .textContent.trim(),
-              price: row
-                .querySelector(".hotel-card__price")
-                .textContent.trim(),
+              price: row.querySelector(".hotel-card__price").textContent.trim(),
               currency: row
                 .querySelector(".hotel-card__price-currency")
                 .textContent.trim(),
