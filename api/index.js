@@ -149,6 +149,7 @@ async function scrapeHotelData(hotelid, checkin, checkout, adults, child) {
 
     await page.goto(xhrUrl, { waitUntil: "networkidle0" });
 
+
     const body = await page.waitForSelector("body");
 
     hotels = await body?.evaluate((el) => el.textContent);
@@ -165,11 +166,14 @@ async function scrapeHotelData(hotelid, checkin, checkout, adults, child) {
 
 app.get("/api/hotels", async (req, res) => {
   const { checkin, checkout, adults, child } = req.query;
+  let hotels
 
-  const hotels = await scrapeHotelsData(checkin, checkout, adults, child);
+  hotels = await scrapeHotelsData(checkin, checkout, adults, child);
 
   if (hotels?.data?.records[0]?.offers?.length > 0){
     return res.json(JSON.parse(hotels));
+  }else{
+    hotels = await scrapeHotelsData(checkin, checkout, adults, child);
   }
   
   res.json(JSON.parse(hotels));
@@ -177,28 +181,17 @@ app.get("/api/hotels", async (req, res) => {
 
 app.get("/api/hotel", async (req, res) => {
   const { hotelid, checkin, checkout, adults, child } = req.query;
+  let hotels
 
-  const scrapeUntilOffers = async (retries = 3) => {
-    const hotels = await scrapeHotelData(hotelid, checkin, checkout, adults, child);
+  hotels = await scrapeHotelsData(hotelid, checkin, checkout, adults, child);
 
-    if (hotels?.data?.records[0]?.offers?.length > 0) {
-      return hotels; // Return the hotels data if offers are found
-    } else if (retries > 0) {
-      // Log the retry attempt (optional)
-      console.log(`No offers found. Retrying... (${retries} attempts left)`);
-      // You can modify the checkin or checkout dates here if needed
-      return scrapeUntilOffers(retries - 1); // Retry with decremented attempts
-    }
-
-    throw new Error("No offers found after multiple attempts"); // Throw an error if no offers found
-  };
-
-  try {
-    const hotels = await scrapeUntilOffers();
-    res.json(JSON.hotels); // Send the response if offers are found
-  } catch (error) {
-    res.status(404).json({ message: error.message }); // Send an error response
+  if (hotels?.data?.records[0]?.offers?.length > 0){
+    return res.json(JSON.parse(hotels));
+  }else{
+    hotels = await scrapeHotelsData(hotelid, checkin, checkout, adults, child);
   }
+  
+  res.json(JSON.parse(hotels));
 });
 
 
