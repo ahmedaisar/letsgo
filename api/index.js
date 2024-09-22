@@ -183,12 +183,12 @@ app.get("/api/hotel", async (req, res) => {
   const { hotelid, checkin, checkout, adults, child } = req.query;
   let hotels
 
-  hotels = await scrapeHotelsData(hotelid, checkin, checkout, adults, child);
+  hotels = await scrapeHotelData(hotelid, checkin, checkout, adults, child);
 
   if (hotels?.data?.records[0]?.offers?.length > 0){
     return res.json(JSON.parse(hotels));
   }else{
-    hotels = await scrapeHotelsData(hotelid, checkin, checkout, adults, child);
+    hotels = await scrapeHotelData(hotelid, checkin, checkout, adults, child);
   }
   
   res.json(JSON.parse(hotels));
