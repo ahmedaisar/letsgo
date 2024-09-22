@@ -143,11 +143,9 @@ async function scrapeHotelData(hotelid, checkin, checkout, adults, child) {
 
     const searchUrl = `https://hotelscan.com/en/search?geoid=x5p4hmhw6iot&checkin=${checkin}&checkout=${checkout}&rooms=${adults}${child ? child : ""}&toas=hotel,resort,guest_house&stars=5,4,3`;
 
-    await page.goto(searchUrl, { waitUntil: "domcontentloaded", timeout: "3000" });
+    await page.goto(searchUrl, { waitUntil: "domcontentloaded" });
 
     const xhrUrl = `https://hotelscan.com/combiner/${hotelid}?pos=zz&locale=en&checkin=${checkin}&checkout=${checkout}&country=MV&rooms=${adults}${child ? child:''}&mobile=1&ef=1&availability=1&deviceNetwork=4g&deviceCpu=20&deviceMemory=8`;
-
-    await page.goto(xhrUrl, { waitUntil: "networkidle0" });
 
     await page.goto(xhrUrl, { waitUntil: "networkidle0" });
 
