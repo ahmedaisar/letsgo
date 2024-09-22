@@ -86,7 +86,7 @@ async function scrapeHotelsData(checkin, checkout, adults, child) {
   }
 }
 
-async function scrapeHotelData(checkin, checkout, adults, child, hotelid) {
+async function scrapeHotelData(hotelid, checkin, checkout, adults, child) {
   let browser;
   let hotels;
 
@@ -141,9 +141,7 @@ async function scrapeHotelData(checkin, checkout, adults, child, hotelid) {
       }
     });
 
-    const xhrUrl = `https://hotelscan.com/combiner/${hotelid}?pos=zz&locale=en&checkin=${checkin}&checkout=${checkout}&rooms=${adults}${
-      child ? child : ""
-    }&mobile=1&loop=10&availability=1&country=MV&ef=1&geoid=x5p4hmhw6iot&toas=hotel%2Cresort%2Cguest_house&stars=5%2C4%2C3&deviceNetwork=4g&deviceCpu=20&deviceMemory=8&limit=25&offset=0`;
+    const xhrUrl = `https://hotelscan.com/combiner/${hotelid}?pos=zz&locale=en&checkin=${checkin}&checkout=${checkout}&country=MV&rooms=${adults}${child ? child:''}0&mobile=0&loop=3&ef=1&deviceNetwork=4g&deviceCpu=20&deviceMemory=8`;
 
     await page.goto(xhrUrl, { waitUntil: "networkidle0" });
 
@@ -176,7 +174,7 @@ app.get("/api/hotels", async (req, res) => {
 });
 
 app.get("/api/hotel", async (req, res) => {
-  const { checkin, checkout, adults, child, hotelid } = req.query;
+  const { hotelid, checkin, checkout, adults, child } = req.query;
 
   const hotels = await scrapeHotelData(hotelid, checkin, checkout, adults, child);
 
