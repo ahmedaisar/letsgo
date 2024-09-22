@@ -7,7 +7,7 @@ const express = require("express");
 const app = express();
 const port = 3000;
 
-async function scrapeHotelsData(checkin, checkout, adults, child) {
+async function scrapeHotelsData(checkin, checkout, adults, child, offset = 0) {
   let browser;
   let hotels;
 
@@ -64,7 +64,7 @@ async function scrapeHotelsData(checkin, checkout, adults, child) {
 
     const searchUrl = `https://hotelscan.com/en/search?geoid=x5p4hmhw6iot&checkin=${checkin}&checkout=${checkout}&rooms=${adults}${child ? child : ""}&toas=hotel,resort,guest_house&stars=5,4,3`;
 
-    const xhrUrl = `https://hotelscan.com/combiner?pos=zz&locale=en&checkin=${checkin}&checkout=${checkout}&rooms=${adults}${child ? child : ""}&mobile=1&loop=10&availability=1&country=MV&ef=1&geoid=x5p4hmhw6iot&toas=hotel%2Cresort%2Cguest_house&stars=5%2C4%2C3&deviceNetwork=4g&deviceCpu=20&deviceMemory=8&limit=25&offset=0`;
+    const xhrUrl = `https://hotelscan.com/combiner?pos=zz&locale=en&checkin=${checkin}&checkout=${checkout}&rooms=${adults}${child ? child : ""}&mobile=1&availability=1&country=MV&ef=1&geoid=x5p4hmhw6iot&toas=hotel%2Cresort%2Cguest_house&stars=5%2C4%2C3&deviceNetwork=4g&deviceCpu=20&deviceMemory=8&limit=25&offset=${offset}`;
 
     await page.goto(searchUrl, { waitUntil: "domcontentloaded", timeout: "3000" });
 
@@ -145,7 +145,7 @@ async function scrapeHotelData(hotelid, checkin, checkout, adults, child) {
 
     await page.goto(searchUrl, { waitUntil: "domcontentloaded", timeout: "3000" });
 
-    const xhrUrl = `https://hotelscan.com/combiner/${hotelid}?pos=zz&locale=en&checkin=${checkin}&checkout=${checkout}&country=MV&rooms=${adults}${child ? child:''}0&mobile=0&loop=3&ef=1&deviceNetwork=4g&deviceCpu=20&deviceMemory=8`;
+    const xhrUrl = `https://hotelscan.com/combiner/${hotelid}?pos=zz&locale=en&checkin=${checkin}&checkout=${checkout}&country=MV&rooms=${adults}${child ? child:''}&mobile=1&ef=1&availability=1&deviceNetwork=4g&deviceCpu=20&deviceMemory=8`;
 
     await page.goto(xhrUrl, { waitUntil: "networkidle0" });
 
@@ -179,19 +179,30 @@ app.get("/api/hotels", async (req, res) => {
 
 app.get("/api/hotel", async (req, res) => {
   const { hotelid, checkin, checkout, adults, child } = req.query;
-  let hotels
 
-  hotels = await scrapeHotelData(hotelid, checkin, checkout, adults, child);
+  const scrapeUntilOffers = async (retries = 3) => {
+    const hotels = await scrapeHotelData(hotelid, checkin, checkout, adults, child);
 
-  if (hotels?.data?.records[0]?.offers?.length > 0){
-    return res.json(JSON.parse(hotels));
-  }else{
-   hotels = await scrapeHotelData(hotelid, checkin, checkout, adults, child);
+    if (hotels?.data?.records[0]?.offers?.length > 0) {
+      return hotels; // Return the hotels data if offers are found
+    } else if (retries > 0) {
+      // Log the retry attempt (optional)
+      console.log(`No offers found. Retrying... (${retries} attempts left)`);
+      // You can modify the checkin or checkout dates here if needed
+      return scrapeUntilOffers(retries - 1); // Retry with decremented attempts
+    }
+
+    throw new Error("No offers found after multiple attempts"); // Throw an error if no offers found
+  };
+
+  try {
+    const hotels = await scrapeUntilOffers();
+    res.json(JSON.hotels); // Send the response if offers are found
+  } catch (error) {
+    res.status(404).json({ message: error.message }); // Send an error response
   }
-  
-  res.json(JSON.parse(hotels));
-  
 });
+
 
 
 app.get("/", async (req, res) => {
