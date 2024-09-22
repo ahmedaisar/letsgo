@@ -161,37 +161,33 @@ app.get("/api/maldives/hotels", async (req, res) => {
   try {
     const { checkin, checkout, adults, child } = req.query;
 
-    // Construct the URL dynamically as before
+    // Construct the URL dynamically as before (if necessary for your scraper)
     const url = `https://hotelscan.com/combiner?pos=zz&locale=en&checkin=${checkin}&checkout=${checkout}&rooms=${adults}${
       child ? child : ""
     }&mobile=1&loop=1&availability=1&country=MV&ef=1&geoid=x5p4hmhw6iot&toas=hotel%2Cbed_and_breakfast%2Cguest_house%2Cresort&deviceNetwork=4g&deviceCpu=20&deviceMemory=8&limit=25&offset=0`;
 
-    // Function to scrape hotels and check if offers exist in the first record
-    const getHotelsData = async () => {
+    // Recursive function to scrape hotels until offers are found in the first record
+    const scrapeUntilOffers = async (attempt = 1) => {
+      console.log(`Scraping attempt #${attempt}...`);
       const hotels = await scrapeHotelsData(checkin, checkout, adults, child);
-      
+
       // Check if the first record has offers
       if (hotels?.data?.records[0]?.offers?.length > 0) {
-        return hotels;
-      } 
-      return null;
+        return hotels;  // Return data if offers are found
+      } else {
+        // Wait for a short period before trying again (optional)
+        await new Promise(resolve => setTimeout(resolve, 3000));  // 3 seconds delay
+        
+        // Recursively try scraping again
+        return scrapeUntilOffers(attempt + 1);
+      }
     };
 
-    // First scrape attempt
-    let hotels = await getHotelsData();
+    // Start scraping process
+    const hotels = await scrapeUntilOffers();
 
-    // Rescrape if no offers are found in the first record
-    if (!hotels) {
-      console.log("No offers found in the first hotel record, rescraping...");
-      hotels = await getHotelsData();
-    }
-
-    // Send the result back
-    if (hotels) {
-      res.json(hotels);  // Return hotels data with valid offers
-    } else {
-      res.status(404).json({ message: "No offers found after rescraping" });
-    }
+    // Return hotel data once offers are found
+    res.json(hotels);
 
   } catch (error) {
     // Handle errors
@@ -199,6 +195,7 @@ app.get("/api/maldives/hotels", async (req, res) => {
     res.status(500).json({ message: "Internal server error", error: error.message });
   }
 });
+
 
 app.get("/api/maldives/hotel", async (req, res) => {
   try {
