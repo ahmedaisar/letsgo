@@ -7,7 +7,7 @@ const express = require("express");
 const app = express();
 const port = 3000;
 
-async function scrapeHotelsData(checkin, checkout, adults, child, offset = 0) {
+async function scrapeHotelsData(checkin, checkout, adults, child) {
   let browser;
   let hotels;
 
@@ -64,9 +64,11 @@ async function scrapeHotelsData(checkin, checkout, adults, child, offset = 0) {
 
     const searchUrl = `https://hotelscan.com/en/search?geoid=x5p4hmhw6iot&checkin=${checkin}&checkout=${checkout}&rooms=${adults}${child ? child : ""}&toas=hotel,resort,guest_house&stars=5,4,3`;
 
-    const xhrUrl = `https://hotelscan.com/combiner?pos=zz&locale=en&checkin=${checkin}&checkout=${checkout}&rooms=${adults}${child ? child : ""}&mobile=1&loop=1&country=MV&ef=1&geoid=x5p4hmhw6iot&availability=1&deviceNetwork=4g&deviceCpu=20&deviceMemory=8&limit=25&offset=${offset}`;
+    const xhrUrl = `https://hotelscan.com/combiner?pos=zz&locale=en&checkin=${checkin}&checkout=${checkout}&rooms=${adults}${child ? child : ""}&mobile=1&loop=10&availability=1&country=MV&ef=1&geoid=x5p4hmhw6iot&toas=hotel%2Cresort%2Cguest_house&stars=5%2C4%2C3&deviceNetwork=4g&deviceCpu=20&deviceMemory=8&limit=25&offset=0`;
 
     await page.goto(searchUrl, { waitUntil: "domcontentloaded", timeout: "3000" });
+
+    await page.goto(xhrUrl, { waitUntil: "networkidle0" });
 
     await page.goto(xhrUrl, { waitUntil: "networkidle0" });
 
@@ -139,7 +141,13 @@ async function scrapeHotelData(hotelid, checkin, checkout, adults, child) {
       }
     });
 
-    const xhrUrl = `https://hotelscan.com/combiner/${hotelid}?pos=zz&locale=en&checkin=${checkin}&checkout=${checkout}&country=MV&rooms=${adults}${child ? child:''}&mobile=1&loop=2&country=MV&ef=1&geoid=x5p4hmhw6iot&deviceNetwork=4g&deviceCpu=20&deviceMemory=8&limit=25&offset=0`;
+    const searchUrl = `https://hotelscan.com/en/search?geoid=x5p4hmhw6iot&checkin=${checkin}&checkout=${checkout}&rooms=${adults}${child ? child : ""}&toas=hotel,resort,guest_house&stars=5,4,3`;
+
+    await page.goto(searchUrl, { waitUntil: "domcontentloaded", timeout: "3000" });
+
+    const xhrUrl = `https://hotelscan.com/combiner/${hotelid}?pos=zz&locale=en&checkin=${checkin}&checkout=${checkout}&country=MV&rooms=${adults}${child ? child:''}0&mobile=0&loop=3&ef=1&deviceNetwork=4g&deviceCpu=20&deviceMemory=8`;
+
+    await page.goto(xhrUrl, { waitUntil: "networkidle0" });
 
     await page.goto(xhrUrl, { waitUntil: "networkidle0" });
 
@@ -157,85 +165,29 @@ async function scrapeHotelData(hotelid, checkin, checkout, adults, child) {
   }
 }
 
-app.get("/api/maldives/hotels", async (req, res) => {
-  try {
-    const { checkin, checkout, adults, child } = req.query;
+app.get("/api/hotels", async (req, res) => {
+  const { checkin, checkout, adults, child } = req.query;
 
-    // Construct the URL dynamically as before
-    const url = `https://hotelscan.com/combiner?pos=zz&locale=en&checkin=${checkin}&checkout=${checkout}&rooms=${adults}${
-      child ? child : ""
-    }&mobile=1&loop=1&availability=1&country=MV&ef=1&geoid=x5p4hmhw6iot&toas=hotel%2Cbed_and_breakfast%2Cguest_house%2Cresort&deviceNetwork=4g&deviceCpu=20&deviceMemory=8&limit=25&offset=0`;
+  const hotels = await scrapeHotelsData(checkin, checkout, adults, child);
 
-    // Function to scrape hotels and check if offers exist in the first record
-    const getHotelsData = async () => {
-      const hotels = await scrapeHotelsData(checkin, checkout, adults, child);
-      
-      // Check if the first record has offers
-      if (hotels?.data?.records[0]?.offers?.length > 0) {
-        return hotels;
-      } 
-      return null;
-    };
-
-    // First scrape attempt
-    let hotels = await getHotelsData();
-
-    // Rescrape if no offers are found in the first record
-    if (!hotels) {
-      console.log("No offers found in the first hotel record, rescraping...");
-      hotels = await getHotelsData();      
-    }
-
-    // Send the result back
-    if (hotels?.data?.records[0]?.offers?.length > 0) {      
-      res.json(hotels);  // Return hotels data with valid offers
-    } else {
-      hotels = await getHotelsData(); 
-    }
-    
-    res.json(JSON.parse(hotels));
-
-  } catch (error) {
-    // Handle errors
-    console.error("Error fetching hotels data:", error);
-    res.status(500).json({ message: "Internal server error", error: error.message });
+  if (hotels?.data?.records[0]?.offers?.length > 0){
+    return res.json(JSON.parse(hotels));
   }
+  
+  res.json(JSON.parse(hotels));
 });
 
-app.get("/api/maldives/hotel", async (req, res) => {
-  try {
-    const { hotelid, checkin, checkout, adults, child } = req.query;
-    
-    // Function to scrape hotel data and return the response if offers exist
-    const getHotelData = async () => {
-      const hotel = await scrapeHotelData(hotelid, checkin, checkout, adults, child);
-      if (hotel?.data?.records[0]?.offers?.length > 0) {
-        return hotel;
-      } 
-      return null;
-    };
+app.get("/api/hotel", async (req, res) => {
+  const { hotelid, checkin, checkout, adults, child } = req.query;
 
-    // First scrape attempt
-    let hotel = await getHotelData();
+  const hotels = await scrapeHotelData(hotelid, checkin, checkout, adults, child);
 
-    // Rescrape if no offers are found
-    if (!hotel) {
-      console.log("No offers found, rescraping...");
-      hotel = await getHotelData();
-    }
-
-    if (hotel) {
-      res.json(hotel);  // Return hotel data with offers
-    } else {
-      res.status(404).json({ message: "No offers found after rescraping" });
-    }
-
-  } catch (error) {
-    // Handle errors
-    console.error("Error fetching hotel data:", error);
-    res.status(500).json({ message: "Internal server error", error: error.message });
+  if (hotels?.data?.records[0]?.offers?.length > 0){
+    return res.json(JSON.parse(hotels));
   }
-
+  
+  res.json(JSON.parse(hotels));
+  
 });
 
 
