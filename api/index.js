@@ -1,11 +1,15 @@
 const puppeteer = require("puppeteer-core");
 const chrome = require("@sparticuz/chromium-min");
+const cors = require('cors');
+
 
 // export const maxDuration = 30;
 
 const express = require("express");
 const app = express();
 const port = 3000;
+
+app.use(cors());
 
 async function scrapeHotelsData(checkin, checkout, adults, child, offset = 0) {
   let browser;
